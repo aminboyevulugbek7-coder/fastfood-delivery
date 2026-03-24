@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyurtmalarim - FastFood Delivery</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .order-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .order-card-header {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .order-id {
+            font-weight: 700;
+            font-size: 18px;
+        }
+        .order-date {
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+        .order-card-body {
+            padding: 20px 24px;
+        }
+        .order-items {
+            margin-bottom: 16px;
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--gray-200);
+        }
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        .order-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 20px;
+            font-weight: 700;
+            padding-top: 16px;
+            border-top: 2px solid var(--gray-200);
+        }
+        .status-timeline {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            position: relative;
+        }
+        .status-timeline::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gray-200);
+            z-index: 0;
+        }
+        .status-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+        .status-step-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+        .status-step.active .status-step-icon {
+            background: var(--primary);
+            color: white;
+        }
+        .status-step.completed .status-step-icon {
+            background: var(--success);
+            color: white;
+        }
+        .status-step-label {
+            font-size: 12px;
+            color: var(--gray-500);
+            text-align: center;
+        }
+        .status-step.active .status-step-label,
+        .status-step.completed .status-step-label {
+            color: var(--gray-900);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="/" class="logo">
+                    <div class="logo-icon">🍔</div>
+                    <div class="logo-text">Fast<span>Food</span></div>
+                </a>
+                <div class="nav-links">
+                    <a href="/" class="nav-link">🏠 Bosh sahifa</a>
+                    <a href="/orders.html" class="nav-link">📋 Buyurtmalarim</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="page-container" style="max-width: 800px; padding-bottom: 40px;">
+        <!-- Search Section -->
+        <div class="form-card" id="searchSection">
+            <div class="form-header">
+                <div style="font-size: 48px; margin-bottom: 8px;">📋</div>
+                <h2>Buyurtmalaringiz</h2>
+                <p>Telefon raqamingizni kiritib buyurtmalar holatini tekshiring</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label">📱 Telefon raqamingiz</label>
+                <input type="tel" id="phoneInput" class="form-input" placeholder="+998 90 123 45 67" onkeypress="if(event.key==='Enter')searchOrders()">
+            </div>
+            <button onclick="searchOrders()" class="btn btn-primary btn-block">🔍 Qidirish</button>
+            <a href="/" class="btn btn-secondary btn-block" style="margin-top: 12px;">← Bosh sahifaga qaytish</a>
+        </div>
+
+        <!-- Orders List -->
+        <div id="ordersList" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="font-size: 24px; font-weight: 700;">📋 Buyurtmalaringiz</h2>
+                <button onclick="showSearch()" class="btn btn-secondary">🔍 Boshqa raqam</button>
+            </div>
+            <div id="ordersContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const statusOrder = ['pending', 'preparing', 'ready', 'delivered'];
+        const statusLabels = {
+            pending: { icon: '⏳', label: 'Kutilmoqda' },
+            preparing: { icon: '👨‍🍳', label: 'Tayyorlanmoqda' },
+            ready: { icon: '✅', label: 'Tayyor' },
+            delivered: { icon: '🚀', label: 'Yetkazildi' }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const phone = urlParams.get('phone');
+            if (phone) {
+                document.getElementById('phoneInput').value = phone;
+                searchOrders();
+            }
+        });
+
+        async function searchOrders() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            if (!phone) {
+                alert('Telefon raqamini kiriting!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/orders');
+                const allOrders = await response.json();
+                const orders = allOrders.filter(o => o.customerPhone.includes(phone.replace(/\s+/g, '')));
+
+                if (orders.length === 0) {
+                    alert('Bu raqamda buyurtmalar topilmadi!');
+                    return;
+                }
+
+                document.getElementById('searchSection').style.display = 'none';
+                document.getElementById('ordersList').style.display = 'block';
+                renderOrders(orders);
+            } catch (err) {
+                alert('Xatolik: ' + err.message);
+            }
+        }
+
+        function showSearch() {
+            document.getElementById('searchSection').style.display = 'block';
+            document.getElementById('ordersList').style.display = 'none';
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('ordersContainer');
+            container.innerHTML = orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(order => {
+                const currentStatusIndex = statusOrder.indexOf(order.status);
+                return `
+                <div class="order-card">
+                    <div class="order-card-header">
+                        <div>
+                            <div class="order-id">Buyurtma #${order.id.toString().slice(-6)}</div>
+                            <div class="order-date">${new Date(order.createdAt).toLocaleString('uz-UZ')}</div>
+                        </div>
+                        <span class="status-badge status-${order.status}">
+                            ${statusLabels[order.status].icon} ${statusLabels[order.status].label}
+                        </span>
+                    </div>
+                    <div class="order-card-body">
+                        <div class="order-items">
+                            ${order.items.map(item => `
+                                <div class="order-item">
+                                    <span>${item.name} × ${item.quantity}</span>
+                                    <span>${formatPrice(item.price * item.quantity)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="order-total">
+                            <span>Jami:</span>
+                            <span style="color: var(--primary);">${formatPrice(order.totalAmount)}</span>
+                        </div>
+                        
+                        <div class="status-timeline">
+                            ${statusOrder.map((status, index) => {
+                                let stepClass = '';
+                                if (index < currentStatusIndex) stepClass = 'completed';
+                                else if (index === currentStatusIndex) stepClass = 'active';
+                                return `
+                                    <div class="status-step ${stepClass}">
+                                        <div class="status-step-icon">${statusLabels[status].icon}</div>
+                                        <div class="status-step-label">${statusLabels[status].label}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('uz-UZ').format(price) + " so'm";
+        }
+    </script>
+</body>
+</html>

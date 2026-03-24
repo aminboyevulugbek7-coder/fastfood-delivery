@@ -1,0 +1,131 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "Lavash",
+      "icon": "🌯"
+    },
+    {
+      "id": 2,
+      "name": "Burger",
+      "icon": "🍔"
+    },
+    {
+      "id": 3,
+      "name": "Pizza",
+      "icon": "🍕"
+    },
+    {
+      "id": 4,
+      "name": "Ichimliklar",
+      "icon": "🥤"
+    },
+    {
+      "id": 5,
+      "name": "Osh",
+      "icon": "🍚"
+    }
+  ],
+  "foods": [
+    {
+      "id": 1,
+      "name": "Tovuqli Lavash",
+      "description": "Yumshoq lavash, tovuq goshti, pomidor, bodring, sous",
+      "price": 25000,
+      "category": "Lavash",
+      "image": ""
+    },
+    {
+      "id": 2,
+      "name": "Goshtli Lavash",
+      "description": "Yumshoq lavash, mol goshti, pomidor, bodring, sous",
+      "price": 28000,
+      "category": "Lavash",
+      "image": ""
+    },
+    {
+      "id": 3,
+      "name": "Cheeseburger",
+      "description": "Bulochka, mol goshti kotleti, pishloq, pomidor, salat bargi",
+      "price": 22000,
+      "category": "Burger",
+      "image": ""
+    },
+    {
+      "id": 4,
+      "name": "Chicken Burger",
+      "description": "Bulochka, tovuq kotleti, pishloq, sous, salat",
+      "price": 20000,
+      "category": "Burger",
+      "image": ""
+    },
+    {
+      "id": 5,
+      "name": "Pepperoni Pizza",
+      "description": "Pizza xamir, pomidor sous, pepperoni kolbasasi, pishloq",
+      "price": 45000,
+      "category": "Pizza",
+      "image": ""
+    },
+    {
+      "id": 6,
+      "name": "Margarita Pizza",
+      "description": "Pizza xamir, pomidor sous, mozzarella pishlogi",
+      "price": 38000,
+      "category": "Pizza",
+      "image": ""
+    },
+    {
+      "id": 7,
+      "name": "Coca-Cola 0.5L",
+      "description": "Sovuq gazli ichimlik",
+      "price": 8000,
+      "category": "Ichimliklar",
+      "image": ""
+    },
+    {
+      "id": 8,
+      "name": "Fanta 0.5L",
+      "description": "Sovuq gazli ichimlik",
+      "price": 8000,
+      "category": "Ichimliklar",
+      "image": ""
+    },
+    {
+      "id": 9,
+      "name": "Osh",
+      "description": "Uzbek milliy taomi - guruch, sabzi, gosht",
+      "price": 35000,
+      "category": "Osh",
+      "image": ""
+    },
+    {
+      "id": 10,
+      "name": "Choy",
+      "description": "Issiq qora choy",
+      "price": 3000,
+      "category": "Ichimliklar",
+      "image": ""
+    }
+  ],
+  "orders": [
+    {
+      "id": 1774321503890,
+      "customerName": "Ulugbek",
+      "customerPhone": "+998934363926",
+      "customerAddress": "djfhkwjef",
+      "items": [
+        {
+          "id": "1",
+          "name": "Tovuqli Lavash",
+          "price": 25000,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 25000,
+      "status": "pending",
+      "chatId": "",
+      "createdAt": "2026-03-24T03:05:03.890Z"
+    }
+  ]
+}

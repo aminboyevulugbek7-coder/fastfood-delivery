@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyurtma berish - FastFood Delivery</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="/" class="logo">
+                    <div class="logo-icon">🍔</div>
+                    <div class="logo-text">Fast<span>Food</span></div>
+                </a>
+                <div class="nav-links">
+                    <a href="/" class="nav-link">🏠 Bosh sahifa</a>
+                    <a href="/orders.html" class="nav-link">📋 Buyurtmalarim</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <div class="page-container" style="max-width: 800px; padding-bottom: 40px;">
+        <div class="form-card">
+            <div class="form-header">
+                <div style="font-size: 48px; margin-bottom: 8px;">🛵</div>
+                <h2>Buyurtmani rasmiylashtirish</h2>
+                <p>Ma'lumotlaringizni kiriting va buyurtmani tasdiqlang</p>
+            </div>
+
+            <!-- Order Summary -->
+            <div style="background: var(--gray-50); border-radius: var(--radius); padding: 20px; margin-bottom: 24px;">
+                <h3 style="margin-bottom: 16px; font-size: 18px;">🛒 Sizning buyurtmangiz</h3>
+                <div id="orderSummary"></div>
+                <div style="border-top: 2px solid var(--gray-200); margin-top: 16px; padding-top: 16px; display: flex; justify-content: space-between; font-size: 20px; font-weight: 700;">
+                    <span>Jami:</span>
+                    <span id="orderTotal" style="color: var(--primary);">0 so'm</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">👤 Ismingiz</label>
+                <input type="text" id="customerName" class="form-input" placeholder="Masalan: Ulug'bek">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">📱 Telefon raqamingiz</label>
+                <input type="tel" id="customerPhone" class="form-input" placeholder="+998 90 123 45 67">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">📍 Manzilingiz</label>
+                <textarea id="customerAddress" class="form-input" rows="3" placeholder="Ko'cha, uy raqami, mo'ljal"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">🗺️ Lokatsiya (ixtiyoriy)</label>
+                <button type="button" onclick="getLocation()" class="btn btn-secondary btn-block" id="locationBtn">
+                    📍 Lokatsiyamni aniqlash
+                </button>
+                <input type="hidden" id="customerLocation">
+                <div id="locationStatus" style="margin-top: 8px; font-size: 14px; color: var(--gray-500);"></div>
+            </div>
+
+            <button onclick="placeOrder()" class="btn btn-primary btn-block" style="padding: 18px; font-size: 18px;">
+                ✅ Buyurtmani tasdiqlash
+            </button>
+
+            <a href="/" class="btn btn-secondary btn-block" style="margin-top: 12px;">
+                ← Orqaga qaytish
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (cart.length === 0) {
+                window.location.href = '/';
+                return;
+            }
+            renderOrderSummary();
+        });
+
+        function renderOrderSummary() {
+            const container = document.getElementById('orderSummary');
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            container.innerHTML = cart.map(item => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--gray-200);">
+                    <div>
+                        <strong>${item.name}</strong>
+                        <span style="color: var(--gray-500);"> × ${item.quantity}</span>
+                    </div>
+                    <div style="font-weight: 600;">${formatPrice(item.price * item.quantity)}</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('orderTotal').textContent = formatPrice(total);
+        }
+
+        function getLocation() {
+            const btn = document.getElementById('locationBtn');
+            const status = document.getElementById('locationStatus');
+            
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Aniqlanmoqda...';
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        document.getElementById('customerLocation').value = `${lat},${lng}`;
+                        btn.innerHTML = '✅ Lokatsiya aniqlandi';
+                        btn.classList.remove('btn-secondary');
+                        btn.classList.add('btn-success');
+                        status.innerHTML = `<a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" style="color: var(--primary);">📍 Xaritada ko'rish</a>`;
+                    },
+                    (error) => {
+                        btn.disabled = false;
+                        btn.innerHTML = '📍 Lokatsiyamni aniqlash';
+                        status.textContent = '❌ Lokatsiyani aniqlab bo\'lmadi';
+                        status.style.color = 'var(--danger)';
+                    }
+                );
+            } else {
+                status.textContent = '❌ Brauzer lokatsiyani qo\'llab-quvvatlamaydi';
+                status.style.color = 'var(--danger)';
+            }
+        }
+
+        async function placeOrder() {
+            const customerName = document.getElementById('customerName').value.trim();
+            const customerPhone = document.getElementById('customerPhone').value.trim();
+            const customerAddress = document.getElementById('customerAddress').value.trim();
+            const customerLocation = document.getElementById('customerLocation').value;
+
+            if (!customerName || !customerPhone || !customerAddress) {
+                alert('Iltimos, barcha maydonlarni to\'ldiring!');
+                return;
+            }
+
+            const chatId = localStorage.getItem('chatId') || '';
+            const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            try {
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customerName,
+                        customerPhone,
+                        customerAddress,
+                        customerLocation,
+                        items: cart,
+                        totalAmount,
+                        chatId
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    localStorage.removeItem('cart');
+                    alert('✅ Buyurtmangiz qabul qilindi!\n\nBuyurtma raqami: #' + result.order.id.toString().slice(-6) + '\n\nTez orada siz bilan bog\'lanamiz!');
+                    window.location.href = '/orders.html?phone=' + encodeURIComponent(customerPhone);
+                } else {
+                    alert('❌ Xatolik: ' + result.error);
+                }
+            } catch (err) {
+                alert('❌ Xatolik: ' + err.message);
+            }
+        }
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('uz-UZ').format(price) + " so'm";
+        }
+    </script>
+</body>
+</html>
