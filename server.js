@@ -368,4 +368,13 @@ app.get('/webhook-info', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    
+    // Keep-alive: ping every 14 minutes to prevent Render sleep
+    if (process.env.RENDER) {
+        setInterval(() => {
+            axios.get(`https://fastfood-delivery-1gaw.onrender.com/`)
+                .then(() => console.log('Keep-alive ping sent'))
+                .catch(() => {});
+        }, 14 * 60 * 1000); // 14 minutes
+    }
 });
