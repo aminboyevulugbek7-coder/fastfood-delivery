@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         const allowedTypes = /jpeg|jpg|png|gif|webp/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -87,7 +87,6 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Get all foods
 app.get('/api/foods', (req, res) => {
     const db = loadDB();
     const { category } = req.query;
@@ -98,13 +97,11 @@ app.get('/api/foods', (req, res) => {
     res.json(foods);
 });
 
-// Get all categories
 app.get('/api/categories', (req, res) => {
     const db = loadDB();
     res.json(db.categories || []);
 });
 
-// Add category
 app.post('/api/categories', (req, res) => {
     const { name, icon } = req.body;
     const db = loadDB();
@@ -115,7 +112,6 @@ app.post('/api/categories', (req, res) => {
     res.json({ success: true, category: newCategory });
 });
 
-// Update category
 app.put('/api/categories/:id', (req, res) => {
     const { name, icon } = req.body;
     const db = loadDB();
@@ -130,7 +126,6 @@ app.put('/api/categories/:id', (req, res) => {
     }
 });
 
-// Delete category
 app.delete('/api/categories/:id', (req, res) => {
     const db = loadDB();
     const index = db.categories.findIndex(c => c.id == req.params.id);
@@ -143,7 +138,6 @@ app.delete('/api/categories/:id', (req, res) => {
     }
 });
 
-// Upload image
 app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'Rasm yuklanmadi' });
@@ -155,7 +149,6 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     });
 });
 
-// Create order
 app.post('/api/orders', async (req, res) => {
     try {
         const { customerName, customerPhone, customerAddress, customerLocation, items, chatId } = req.body;
@@ -178,7 +171,6 @@ app.post('/api/orders', async (req, res) => {
         db.orders.push(order);
         saveDB(db);
         
-        // Build order message
         let message = `✅ <b>Yangi buyurtma!</b>\n\n`;
         message += `📋 Buyurtma raqami: <b>#${order.id.toString().slice(-6)}</b>\n`;
         message += `👤 Ism: <b>${customerName}</b>\n`;
@@ -197,12 +189,10 @@ app.post('/api/orders', async (req, res) => {
         });
         message += `\n💰 <b>Jami: ${totalAmount.toLocaleString()} so'm</b>`;
         
-        // Send to customer
         if (chatId) {
             await sendTelegramMessage(chatId, message);
         }
         
-        // Send to admin
         if (process.env.ADMIN_CHAT_ID) {
             await sendTelegramMessage(process.env.ADMIN_CHAT_ID, message);
         }
@@ -213,7 +203,6 @@ app.post('/api/orders', async (req, res) => {
     }
 });
 
-// Get orders
 app.get('/api/orders', (req, res) => {
     const db = loadDB();
     const { phone } = req.query;
@@ -224,7 +213,6 @@ app.get('/api/orders', (req, res) => {
     res.json(orders);
 });
 
-// Update order status
 app.put('/api/orders/:id', (req, res) => {
     const { status } = req.body;
     const db = loadDB();
@@ -238,7 +226,6 @@ app.put('/api/orders/:id', (req, res) => {
     }
 });
 
-// Add new food
 app.post('/api/foods', (req, res) => {
     const { name, description, price, category, image } = req.body;
     const db = loadDB();
@@ -255,7 +242,6 @@ app.post('/api/foods', (req, res) => {
     res.json({ success: true, food: newFood });
 });
 
-// Update food
 app.put('/api/foods/:id', (req, res) => {
     const { name, description, price, category, image } = req.body;
     const db = loadDB();
@@ -273,7 +259,6 @@ app.put('/api/foods/:id', (req, res) => {
     }
 });
 
-// Delete food
 app.delete('/api/foods/:id', (req, res) => {
     const db = loadDB();
     const index = db.foods.findIndex(f => f.id == req.params.id);
@@ -295,9 +280,16 @@ app.post('/bot', async (req, res) => {
         const chatId = message.chat.id;
         
         if (data === 'order_food') {
-            const siteUrl = `${req.protocol}://${req.get('host')}?chat_id=${chatId}`;
-            const msg = `🍔 Ovqat buyurtma berish uchun havolani bosing:\n\n${siteUrl}\n\n📱 Havolani bosib saytga o'ting!`;
-            await sendTelegramMessage(chatId, msg);
+            await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
+                chat_id: chatId,
+                text: '🍔 Buyurtma berish uchun quyidagi tugmani bosing:',
+                reply_markup: {
+                    inline_keyboard: [[{
+                        text: '🛒 Taomlarni tanlash',
+                        web_app: { url: 'https://fastfood-delivery-1gaw.onrender.com' }
+                    }]]
+                }
+            });
         }
         
         await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerCallbackQuery`, {
@@ -310,7 +302,7 @@ app.post('/bot', async (req, res) => {
         const text = update.message.text;
         
         if (text === '/start') {
-            const welcome = `👋 Assalomu alaykum!\n\n🍔 Food Delivery botiga xush kelibsiz!\n\nOvqat buyurtma berish uchun tugmani bosing:`;
+            const welcome = `👋 Assalomu alaykum!\n\n🍔 <b>FastFood Delivery</b> botiga xush kelibsiz!\n\n🚀 Tez va oson buyurtma berish uchun quyidagi tugmani bosing:`;
             
             await sendTelegramMessage(chatId, welcome, {
                 inline_keyboard: [[{ text: '🍽️ Ovqat buyurtma berish', callback_data: 'order_food' }]]
@@ -325,7 +317,6 @@ app.post('/bot', async (req, res) => {
     res.send('OK');
 });
 
-// Telegram helper function
 async function sendTelegramMessage(chatId, message, replyMarkup = null) {
     try {
         const data = {
@@ -343,7 +334,6 @@ async function sendTelegramMessage(chatId, message, replyMarkup = null) {
     }
 }
 
-// Setup webhook endpoint
 app.get('/setup-webhook', async (req, res) => {
     try {
         const webhookUrl = `${req.protocol}://${req.get('host')}/bot`;
@@ -356,7 +346,6 @@ app.get('/setup-webhook', async (req, res) => {
     }
 });
 
-// Check webhook status
 app.get('/webhook-info', async (req, res) => {
     try {
         const response = await axios.get(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/getWebhookInfo`);
@@ -369,12 +358,11 @@ app.get('/webhook-info', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     
-    // Keep-alive: ping every 14 minutes to prevent Render sleep
     if (process.env.RENDER) {
         setInterval(() => {
             axios.get(`https://fastfood-delivery-1gaw.onrender.com/`)
                 .then(() => console.log('Keep-alive ping sent'))
                 .catch(() => {});
-        }, 14 * 60 * 1000); // 14 minutes
+        }, 14 * 60 * 1000);
     }
 });
