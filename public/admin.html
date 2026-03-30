@@ -125,6 +125,36 @@
                 </div>
             </div>
 
+            <!-- Date Filter & Period Stats -->
+            <div class="admin-card" style="margin-bottom: 20px;">
+                <div class="admin-card-header">
+                    <h3>📊 Statistika</h3>
+                </div>
+                <div class="admin-card-body">
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+                        <button onclick="filterByDate('today')" class="btn btn-secondary" id="btnToday">Bugun</button>
+                        <button onclick="filterByDate('week')" class="btn btn-secondary" id="btnWeek">Shu hafta</button>
+                        <button onclick="filterByDate('month')" class="btn btn-secondary" id="btnMonth">Shu oy</button>
+                        <button onclick="filterByDate('all')" class="btn btn-secondary active" id="btnAll">Hammasi</button>
+                        <input type="date" id="customDate" onchange="filterByDate('custom')" class="form-input" style="width: auto;">
+                    </div>
+                    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 0;">
+                        <div class="stat-card" style="padding: 16px;">
+                            <h4 id="periodOrders" style="font-size: 24px;">0</h4>
+                            <p style="font-size: 12px;">Tanlangan davr</p>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <h4 id="periodRevenue" style="font-size: 24px;">0</h4>
+                            <p style="font-size: 12px;">Davr daromadi</p>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <h4 id="avgCheck" style="font-size: 24px;">0</h4>
+                            <p style="font-size: 12px;">Oʻrtacha chek</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tabs -->
             <div class="admin-tabs">
                 <button class="admin-tab active" onclick="showTab('orders')">📋 Buyurtmalar <span class="live-indicator"><span class="live-dot"></span>LIVE</span></button>
@@ -267,6 +297,53 @@
 
         function loadAll() { loadOrders(); loadFoods(); loadCategories(); }
 
+        let filteredOrders = [];
+        let currentDateFilter = 'all';
+
+        function filterByDate(period) {
+            currentDateFilter = period;
+            document.querySelectorAll('#periodStats .btn').forEach(b => b.classList.remove('active'));
+            if (period !== 'custom') {
+                document.getElementById('btn' + period.charAt(0).toUpperCase() + period.slice(1)).classList.add('active');
+            }
+            
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            if (period === 'today') {
+                filteredOrders = orders.filter(o => new Date(o.createdAt) >= today);
+            } else if (period === 'week') {
+                const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                filteredOrders = orders.filter(o => new Date(o.createdAt) >= weekAgo);
+            } else if (period === 'month') {
+                const monthAgo = new Date(today.getFullYear(), today.getMonth(), 1);
+                filteredOrders = orders.filter(o => new Date(o.createdAt) >= monthAgo);
+            } else if (period === 'custom') {
+                const customDate = new Date(document.getElementById('customDate').value);
+                customDate.setHours(0, 0, 0, 0);
+                const nextDay = new Date(customDate.getTime() + 24 * 60 * 60 * 1000);
+                filteredOrders = orders.filter(o => {
+                    const orderDate = new Date(o.createdAt);
+                    return orderDate >= customDate && orderDate < nextDay;
+                });
+            } else {
+                filteredOrders = orders;
+            }
+            
+            updatePeriodStats();
+            renderOrders();
+        }
+
+        function updatePeriodStats() {
+            const count = filteredOrders.length;
+            const revenue = filteredOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+            const avg = count > 0 ? Math.round(revenue / count) : 0;
+            
+            document.getElementById('periodOrders').textContent = count;
+            document.getElementById('periodRevenue').textContent = formatPrice(revenue);
+            document.getElementById('avgCheck').textContent = formatPrice(avg);
+        }
+
         function updateStats() {
             document.getElementById('totalOrders').textContent = orders.length;
             document.getElementById('totalFoods').textContent = foods.length;
@@ -309,7 +386,9 @@
             try {
                 const response = await fetch('/api/orders');
                 orders = await response.json();
+                filteredOrders = orders;
                 updateStats();
+                updatePeriodStats();
                 renderOrders();
             } catch (err) { alert('Xatolik: ' + err.message); }
         }
