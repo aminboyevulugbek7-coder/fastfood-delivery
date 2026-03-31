@@ -2,11 +2,17 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Admin Panel - FastFood Delivery</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>
+        html, body { margin: 0; padding: 0; overflow-x: hidden; width: 100%; }
         .admin-body { overflow-x: hidden; }
+        .navbar { padding: 10px 0 !important; }
+        .logo-icon { width: 36px !important; height: 36px !important; font-size: 18px !important; }
+        .logo-text { font-size: 16px !important; }
+        .nav-link { padding: 6px 10px !important; font-size: 13px !important; }
         .image-upload-area { border: 2px dashed var(--gray-300); border-radius: var(--radius); padding: 30px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--gray-50); margin-bottom: 16px; }
         .image-upload-area:hover { border-color: var(--primary); background: rgba(255, 107, 53, 0.05); }
         .image-upload-area.has-image { padding: 10px; }
@@ -271,6 +277,10 @@
     </div>
 
     <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        
         const ADMIN_PASSWORD = '123';
         let categories = [], foods = [], orders = [];
         let currentView = 'cards';
@@ -286,7 +296,10 @@
             } else { alert('Xato parol!'); }
         }
 
-        function logout() { sessionStorage.removeItem('adminLoggedIn'); location.reload(); }
+        function logout() { 
+            sessionStorage.removeItem('adminLoggedIn'); 
+            location.reload(); 
+        }
 
         if (sessionStorage.getItem('adminLoggedIn') === 'true') {
             document.getElementById('loginSection').style.display = 'none';
