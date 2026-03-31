@@ -6,8 +6,17 @@ const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
 const multer = require('multer');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 const PORT = process.env.PORT || 3000;
 
 // Multer setup for image uploads
@@ -45,6 +54,30 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
+
+// Socket.IO real-time connections
+io.on('connection', (socket) => {
+    console.log('🔌 User connected:', socket.id);
+    
+    // Admin panelga ulanish
+    socket.on('admin-join', () => {
+        socket.join('admin-room');
+        console.log('👨‍💼 Admin joined:', socket.id);
+        // Hozirgi buyurtmalarni yuborish
+        const db = loadDB();
+        socket.emit('initial-orders', db.orders.sort((a, b) => b.id - a.id));
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('❌ User disconnected:', socket.id);
+    });
+});
+
+// Real-time xabar yuborish funksiyasi
+function broadcastUpdate(event, data) {
+    io.to('admin-room').emit(event, data);
+    console.log(`📡 Broadcasted ${event} to admin-room`);
+}
 
 // Simple JSON database
 const DB_FILE = path.join(__dirname, 'data.json');
@@ -109,6 +142,9 @@ app.post('/api/categories', (req, res) => {
     const newCategory = { id: Date.now(), name, icon };
     db.categories.push(newCategory);
     saveDB(db);
+            
+    // REAL-TIME: Yangi kategoriya qo'shilganda
+    broadcastUpdate('category-added', newCategory);
     res.json({ success: true, category: newCategory });
 });
 
@@ -120,6 +156,9 @@ app.put('/api/categories/:id', (req, res) => {
         category.name = name;
         category.icon = icon;
         saveDB(db);
+        
+        // REAL-TIME: Kategoriya o'zgarganda
+        broadcastUpdate('category-updated', { id: category.id, ...category });
         res.json({ success: true });
     } else {
         res.status(404).json({ error: 'Category not found' });
@@ -132,6 +171,9 @@ app.delete('/api/categories/:id', (req, res) => {
     if (index !== -1) {
         db.categories.splice(index, 1);
         saveDB(db);
+        
+        // REAL-TIME: Kategoriya o'chirilganda
+        broadcastUpdate('category-deleted', { id: req.params.id });
         res.json({ success: true });
     } else {
         res.status(404).json({ error: 'Category not found' });
@@ -170,6 +212,9 @@ app.post('/api/orders', async (req, res) => {
         
         db.orders.push(order);
         saveDB(db);
+        
+        // REAL-TIME: Admin panelga yangi buyurtma haqida xabar
+        broadcastUpdate('new-order', order);
         
         let message = `✅ <b>Yangi buyurtma!</b>\n\n`;
         message += `📋 Buyurtma raqami: <b>#${order.id.toString().slice(-6)}</b>\n`;
@@ -220,6 +265,10 @@ app.put('/api/orders/:id', (req, res) => {
     if (order) {
         order.status = status;
         saveDB(db);
+        
+        // REAL-TIME: Buyurtma holati o'zgarganda xabar
+        broadcastUpdate('order-status-changed', { orderId: order.id, status: status });
+        
         res.json({ success: true });
     } else {
         res.status(404).json({ error: 'Order not found' });
@@ -239,6 +288,9 @@ app.post('/api/foods', (req, res) => {
     };
     db.foods.push(newFood);
     saveDB(db);
+    
+    // REAL-TIME: Yangi taom qo'shilganda
+    broadcastUpdate('food-added', newFood);
     res.json({ success: true, food: newFood });
 });
 
@@ -253,6 +305,9 @@ app.put('/api/foods/:id', (req, res) => {
         food.category = category;
         if (image !== undefined) food.image = image;
         saveDB(db);
+        
+        // REAL-TIME: Taom o'zgarganda
+        broadcastUpdate('food-updated', { id: food.id, ...food });
         res.json({ success: true });
     } else {
         res.status(404).json({ error: 'Food not found' });
@@ -265,6 +320,9 @@ app.delete('/api/foods/:id', (req, res) => {
     if (index !== -1) {
         db.foods.splice(index, 1);
         saveDB(db);
+        
+        // REAL-TIME: Taom o'chirilganda
+        broadcastUpdate('food-deleted', { id: req.params.id });
         res.json({ success: true });
     } else {
         res.status(404).json({ error: 'Food not found' });
@@ -357,6 +415,7 @@ app.get('/webhook-info', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`🔌 Socket.IO ready for real-time updates!`);
     
     if (process.env.RENDER) {
         setInterval(() => {

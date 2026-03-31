@@ -276,10 +276,107 @@
         </div>
     </div>
 
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
+        
+        // Socket.IO ulanish
+        const socket = io();
+        let isConnected = false;
+        
+        // Admin panelga ulanish
+        function connectToRealTime() {
+            if (!isConnected) {
+                socket.emit('admin-join');
+                isConnected = true;
+                console.log('🔌 Connected to real-time updates');
+            }
+        }
+        
+        // Real-time xabarlarni tinglash
+        socket.on('connect', () => {
+            console.log('✅ Socket.IO connected');
+            connectToRealTime();
+        });
+        
+        socket.on('initial-orders', (orders) => {
+            console.log('📋 Initial orders loaded:', orders.length);
+            orders = orders;
+            filteredOrders = orders;
+            updateStats();
+            updatePeriodStats();
+            renderOrders();
+        });
+        
+        socket.on('new-order', (order) => {
+            console.log('🆕 New order received:', order.id);
+            orders.unshift(order);
+            filteredOrders = orders;
+            updateStats();
+            updatePeriodStats();
+            renderOrders();
+            // Ovozli signal
+            playNotificationSound();
+        });
+        
+        socket.on('order-status-changed', (data) => {
+            console.log('📝 Order status changed:', data.orderId, data.status);
+            const order = orders.find(o => o.id === data.orderId);
+            if (order) {
+                order.status = data.status;
+                renderOrders();
+            }
+        });
+        
+        socket.on('food-added', (food) => {
+            console.log('🍽️ Food added:', food.name);
+            foods.push(food);
+            loadFoods();
+        });
+        
+        socket.on('food-updated', (food) => {
+            console.log('✏️ Food updated:', food.name);
+            const index = foods.findIndex(f => f.id === food.id);
+            if (index !== -1) {
+                foods[index] = food;
+                loadFoods();
+            }
+        });
+        
+        socket.on('food-deleted', (data) => {
+            console.log('🗑️ Food deleted:', data.id);
+            foods = foods.filter(f => f.id !== data.id);
+            loadFoods();
+        });
+        
+        socket.on('category-added', (category) => {
+            console.log('📁 Category added:', category.name);
+            categories.push(category);
+            loadCategories();
+        });
+        
+        socket.on('category-updated', (category) => {
+            console.log('✏️ Category updated:', category.name);
+            const index = categories.findIndex(c => c.id === category.id);
+            if (index !== -1) {
+                categories[index] = category;
+                loadCategories();
+            }
+        });
+        
+        socket.on('category-deleted', (data) => {
+            console.log('🗑️ Category deleted:', data.id);
+            categories = categories.filter(c => c.id !== data.id);
+            loadCategories();
+        });
+        
+        // Bildirishma ovozi
+        function playNotificationSound() {
+            const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU');
+            audio.play().catch(() => {});
+        }
         
         const ADMIN_PASSWORD = '123';
         let categories = [], foods = [], orders = [];
