@@ -175,8 +175,15 @@
         }
 
         function updateQuantity(id,change) {
-            const item = cart.find(i=>i.id===id);
-            if(item) { item.quantity+=change; if(item.quantity<=0) cart=cart.filter(i=>i.id!==id); localStorage.setItem('cart',JSON.stringify(cart)); updateCartUI(); }
+            const item = cart.find(i => i.id === id);
+            if(item) { 
+                item.quantity += change; 
+                if(item.quantity <= 0) {
+                    cart = cart.filter(i => i.id !== id);
+                }
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartUI();
+            }
         }
 
         function removeFromCart(id) { cart=cart.filter(i=>i.id!==id); localStorage.setItem('cart',JSON.stringify(cart)); updateCartUI(); }
@@ -185,7 +192,7 @@
             document.getElementById('cartCount').textContent = cart.reduce((s,i)=>s+i.quantity,0);
             const itemsDiv = document.getElementById('cartItems');
             if(!cart.length) { itemsDiv.innerHTML='<div class="empty-state" style="padding:40px;text-align:center;"><div style="font-size:48px;">🛒</div><h3>Savat bo\'sh</h3></div>'; }
-            else { itemsDiv.innerHTML = cart.map(i=>`<div class="cart-item"><div class="cart-item-image">🍽️</div><div class="cart-item-info"><div class="cart-item-name">${i.name}</div><div class="cart-item-price">${formatPrice(i.price)}</div><div class="quantity-control"><button class="quantity-btn" onclick="updateQuantity('${i.id}',-1)">−</button><span class="quantity-value">${i.quantity}</span><button class="quantity-btn" onclick="updateQuantity('${i.id}',1)">+</button></div></div><div class="remove-item" onclick="removeFromCart('${i.id}')">🗑️</div></div>`).join(''); }
+            else { itemsDiv.innerHTML = cart.map(i=>`<div class="cart-item"><div class="cart-item-image">🍽️</div><div class="cart-item-info"><div class="cart-item-name">${i.name}</div><div class="cart-item-price">${formatPrice(i.price)}</div><div class="quantity-control"><button class="quantity-btn" onclick="updateQuantity(${i.id},-1)">−</button><span class="quantity-value">${i.quantity}</span><button class="quantity-btn" onclick="updateQuantity(${i.id},1)">+</button></div></div><div class="remove-item" onclick="removeFromCart(${i.id})">🗑️</div></div>`).join(''); }
             document.getElementById('cartTotal').textContent = formatPrice(cart.reduce((s,i)=>s+i.price*i.quantity,0));
         }
 
