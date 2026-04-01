@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { LoggerService } from './logger/logger.service';
+import { BotService } from './bot/bot.service';
 
 async function bootstrap(): Promise<void> {
   // Load environment variables from .env file
@@ -37,9 +38,14 @@ async function bootstrap(): Promise<void> {
     credentials: true,
   });
 
-  const port = process.env.PORT || 3000;
+  const port = parseInt(process.env.PORT || '5000', 10);
   await app.listen(port);
   logger.log(`Application is running on: http://localhost:${port}`, 'Bootstrap');
+
+  // Launch Telegram bot in polling mode
+  const botService = app.get(BotService);
+  await botService.launch();
+  logger.log('Telegram bot launched in polling mode', 'Bootstrap');
 }
 
 bootstrap().catch((error: Error) => {
