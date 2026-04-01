@@ -108,24 +108,5 @@
       "image": ""
     }
   ],
-  "orders": [
-    {
-      "id": 1774321503890,
-      "customerName": "Ulugbek",
-      "customerPhone": "+998934363926",
-      "customerAddress": "djfhkwjef",
-      "items": [
-        {
-          "id": "1",
-          "name": "Tovuqli Lavash",
-          "price": 25000,
-          "quantity": 1
-        }
-      ],
-      "totalAmount": 25000,
-      "status": "pending",
-      "chatId": "",
-      "createdAt": "2026-03-24T03:05:03.890Z"
-    }
-  ]
+  "orders": []
 }

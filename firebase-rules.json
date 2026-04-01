@@ -1,0 +1,43 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid",
+        ".validate": "newData.hasChildren(['telegramId', 'createdAt', 'lastActive', 'orderHistory', 'preferences'])"
+      }
+    },
+    "orders": {
+      ".read": "root.child('users').child(auth.uid).exists()",
+      ".write": "root.child('users').child(auth.uid).exists()",
+      "$orderId": {
+        ".validate": "newData.hasChildren(['id', 'telegramId', 'customerName', 'phoneNumber', 'address', 'items', 'totalPrice', 'status', 'createdAt', 'updatedAt'])"
+      }
+    },
+    "foods": {
+      ".read": true,
+      ".write": "root.child('admins').child(auth.uid).exists()",
+      "$foodId": {
+        ".validate": "newData.hasChildren(['id', 'name', 'description', 'price', 'categoryId', 'available', 'stock', 'createdAt', 'updatedAt'])"
+      }
+    },
+    "categories": {
+      ".read": true,
+      ".write": "root.child('admins').child(auth.uid).exists()",
+      "$categoryId": {
+        ".validate": "newData.hasChildren(['id', 'name', 'description', 'order', 'active', 'createdAt', 'updatedAt'])"
+      }
+    },
+    "images": {
+      ".read": true,
+      ".write": "root.child('admins').child(auth.uid).exists()",
+      "$imageId": {
+        ".validate": "newData.hasChildren(['id', 'filename', 'originalName', 'mimeType', 'size', 'uploadedAt'])"
+      }
+    },
+    "admins": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
