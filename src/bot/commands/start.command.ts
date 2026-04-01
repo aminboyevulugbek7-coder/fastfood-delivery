@@ -18,10 +18,11 @@ Quyidagi buyruqlardan foydalanishingiz mumkin:
 /help - Yordam
 /contact - Aloqa ma'lumotlari
 
-Buyurtma berish uchun /menu buyrug'ini bosing!`;
+Buyurtma berish uchun /menu buyrug'ini bosing yoki Mini App ni oching!`;
 
       const keyboard = {
         inline_keyboard: [
+          [{ text: '🛒 Mini App ochish', url: 'https://t.me/your_bot_name/app' }],
           [{ text: '🍔 Menyu', callback_data: 'menu' }],
           [{ text: '📋 Mening buyurtmalarim', callback_data: 'orders' }],
           [{ text: '❓ Yordam', callback_data: 'help' }],

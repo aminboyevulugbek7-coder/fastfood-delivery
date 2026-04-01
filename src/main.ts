@@ -38,14 +38,20 @@ async function bootstrap(): Promise<void> {
     credentials: true,
   });
 
-  const port = parseInt(process.env.PORT || '5000', 10);
-  await app.listen(port);
-  logger.log(`Application is running on: http://localhost:${port}`, 'Bootstrap');
+  const port = parseInt(process.env.PORT || '6000', 10);
+  
+  try {
+    await app.listen(port);
+    logger.log(`Application is running on: http://localhost:${port}`, 'Bootstrap');
 
-  // Launch Telegram bot in polling mode
-  const botService = app.get(BotService);
-  await botService.launch();
-  logger.log('Telegram bot launched in polling mode', 'Bootstrap');
+    // Launch Telegram bot in polling mode
+    const botService = app.get(BotService);
+    await botService.launch();
+    logger.log('Telegram bot launched in polling mode', 'Bootstrap');
+  } catch (error) {
+    logger.error(`Failed to start server on port ${port}: ${error instanceof Error ? error.message : String(error)}`, 'Bootstrap');
+    throw error;
+  }
 }
 
 bootstrap().catch((error: Error) => {
